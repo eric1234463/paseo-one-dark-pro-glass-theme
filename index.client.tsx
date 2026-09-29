@@ -1,7 +1,8 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
 
-// One Dark Pro Glass — port of ~/.config/otty/themes/one-dark-pro-glass.ottytheme
-// (itself a port of bukitoka/one-dark-pro-max `one-dark-pro-glass.json` for Zed).
+// One Dark Pro Glass — follows upstream bukitoka/one-dark-pro-max
+// `themes/one-dark-pro-glass.json` (Zed, glass author BoyeDarat),
+// via ~/.config/otty/themes/one-dark-pro-glass.ottytheme.
 //
 // Paseo themes are opaque hex only: no alpha channel, no vibrancy/material.
 // So the glass translucency (window #080909DD, transparent panels) cannot
