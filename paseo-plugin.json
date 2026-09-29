@@ -1,0 +1,7 @@
+{
+  "id": "paseo-one-dark-pro-glass-theme",
+  "description": "One Dark Pro Glass — One Dark Pro Max on a near-black backdrop, ported from the Otty theme.",
+  "requirements": {
+    "paseo": ">=0.10.1"
+  }
+}
