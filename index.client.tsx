@@ -17,7 +17,7 @@ export default function contribute(client: PluginClientContext) {
       foreground: "#D7DAE0", // [token] foreground (mono0, primary text)
       raised: "#2C313A", // [panel] surface / element.hover+select (elevated)
       control: "#3E4452", // [terminal] selection-background (inputs, one step up)
-      border: "#212121", // [panel] border / [divider] verbatim
+      border: "#3E4452", // [terminal] selection-background, NOT source [panel] border #212121 — pixel scan proved #212121 invisible on #080909, card floated with no edge (D6)
       accent: "#61AFEF", // [token] accent (syntax.function, active-tab indicator)
       mutedForeground: "#ABB2BF", // [token] secondary (mono1, secondary text)
       ring: "#4E5666", // scrollbar.thumb, alpha stripped (#4E566680)
