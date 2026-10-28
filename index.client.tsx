@@ -1,4 +1,5 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
+import { contributeToolLine } from "./client/tool-line";
 
 // One Dark Pro Glass — follows upstream bukitoka/one-dark-pro-max
 // `themes/one-dark-pro-glass.json` (Zed, glass author BoyeDarat),
@@ -24,5 +25,5 @@ export default function contribute(client: PluginClientContext) {
       ring: "#4E5666", // scrollbar.thumb, alpha stripped (#4E566680)
     },
   });
-  return () => {};
+  return contributeToolLine(client);
 }

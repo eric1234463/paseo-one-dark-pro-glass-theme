@@ -3,9 +3,15 @@
 Paseo theme plugin ported from `~/.config/otty/themes/one-dark-pro-glass.ottytheme`
 (itself a port of bukitoka/one-dark-pro-max `one-dark-pro-glass.json` for Zed).
 
-Theme-only plugin: no daemon side, no `index.server.ts`. One `client.addTheme`
-call in `index.client.tsx` — Paseo expands the 8-color palette into its full
-dark-theme token set.
+Client-only plugin: no daemon side, no `index.server.ts`. `index.client.tsx`
+registers the theme with one `client.addTheme` call — Paseo expands the 8-color
+palette into its full dark-theme token set.
+
+It also compacts the agent timeline (`client/tool-line.tsx`): every tool call
+except plans renders as one line with an icon, tool name, summary and status.
+Tap a line to expand its output; failed calls start expanded. Plans, permission
+prompts and assistant messages keep Paseo's native rendering. Expanded output
+keeps only the last 8000 characters.
 
 ## Known limitation
 

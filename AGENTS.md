@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is a theme-only Paseo plugin. `index.client.tsx` exports `contribute`, registers the eight-color dark palette with `client.addTheme`, and returns a cleanup callback. There is no server entry point, application shell, test directory, or asset directory.
+This is a client-only Paseo plugin. `index.client.tsx` exports `contribute`, registers the eight-color dark palette with `client.addTheme`, and returns the cleanup callback from `client/tool-line.tsx`, which collapses tool calls (except plans) into one expandable timeline line. There is no server entry point, application shell, test directory, or asset directory.
 
 `paseo-plugin.json` defines the plugin ID and runtime compatibility. `package.json` and `package-lock.json` define development dependencies; `tsconfig.json` enables strict TypeScript checking. `README.md` documents installation, attribution, and theme limitations.
 
@@ -18,7 +18,7 @@ There are no build, development-server, lint, or automated-test scripts. Enable 
 
 Match the existing two-space indentation, double quotes, semicolons, and trailing commas in TypeScript. Use type-only imports for types. Keep JSON formatted with two-space indentation. No formatter or linter is configured.
 
-Preserve the existing plugin and theme IDs. Use the SDK's existing palette keys and uppercase six-digit hex colors. Keep changes focused on theme registration and palette values; avoid introducing helpers or dependencies for simple color edits.
+Preserve the existing plugin and theme IDs. Use the SDK's existing palette keys and uppercase six-digit hex colors. Keep changes focused on theme registration, palette values and the tool-line timeline renderer; avoid introducing helpers or dependencies for simple color edits.
 
 ## Testing Guidelines
 

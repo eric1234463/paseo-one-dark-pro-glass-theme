@@ -1,6 +1,6 @@
 {
   "id": "paseo-one-dark-pro-glass-theme",
-  "description": "One Dark Pro Glass — One Dark Pro Max on a near-black backdrop, ported from the Otty theme.",
+  "description": "One Dark Pro Glass — One Dark Pro Max on a near-black backdrop, ported from the Otty theme, plus compact one-line tool calls in the agent timeline.",
   "requirements": {
     "paseo": ">=0.10.0"
   }
