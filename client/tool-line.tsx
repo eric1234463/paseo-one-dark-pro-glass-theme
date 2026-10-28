@@ -222,8 +222,8 @@ function highlightShell(command: string): Token[] {
   return tokens;
 }
 
-function tint(hex: string): string {
-  return /^#[0-9A-Fa-f]{6}$/.test(hex) ? `${hex}26` : "transparent";
+function tint(hex: string, alpha = "26"): string {
+  return /^#[0-9A-Fa-f]{6}$/.test(hex) ? `${hex}${alpha}` : "transparent";
 }
 
 function Tokens({ tokens, fallback }: { tokens: Token[]; fallback: string }) {
@@ -296,11 +296,22 @@ function ToolLine({ item, theme, layout }: PluginTimelineItemProps<ToolLineData>
   };
 
   return (
-    <View style={{ marginVertical: 1 }}>
+    <View style={{ marginVertical: 2 }}>
       <Pressable
         onPress={() => setExpanded((value) => !value)}
         disabled={!expandable}
-        style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 2 }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
+          paddingVertical: 4,
+          paddingHorizontal: 6,
+          borderLeftWidth: 2,
+          borderLeftColor: actionColor,
+          borderRadius: 4,
+          // Tinted row so tool output stands apart from assistant prose.
+          backgroundColor: tint(actionColor, expanded ? "26" : "14"),
+        }}
       >
         <View style={{ width: 12 }}>
           {expandable ? (
@@ -337,29 +348,53 @@ function ToolLine({ item, theme, layout }: PluginTimelineItemProps<ToolLineData>
         <View
           style={{
             marginTop: 2,
-            marginLeft: 18,
+            marginLeft: 8,
             borderWidth: 1,
-            borderColor: colors.border,
+            borderLeftWidth: 3,
+            borderColor: tint(actionColor, "55"),
+            borderLeftColor: actionColor,
             borderRadius: 6,
-            backgroundColor: colors.surface1,
+            backgroundColor: colors.surface0,
             overflow: "hidden",
           }}
         >
-          {isShell ? (
-            <Text
-              selectable
+          {target ? (
+            <View
               style={{
-                fontSize: 12,
-                fontFamily: mono,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: 8,
                 paddingHorizontal: 8,
                 paddingVertical: 6,
+                backgroundColor: tint(actionColor, "1F"),
                 borderBottomWidth: output ? 1 : 0,
-                borderBottomColor: colors.border,
+                borderBottomColor: tint(actionColor, "55"),
               }}
             >
-              <Text style={{ color: colors.accent }}>$ </Text>
-              <Tokens tokens={highlightShell(target)} fallback={colors.foreground} />
-            </Text>
+              <Text selectable style={{ flex: 1, fontSize: 12, fontFamily: mono }}>
+                {isShell ? (
+                  <>
+                    <Text style={{ color: actionColor }}>$ </Text>
+                    <Tokens tokens={highlightShell(target)} fallback={colors.foreground} />
+                  </>
+                ) : isPath && slash >= 0 ? (
+                  <>
+                    <Text style={{ color: colors.foregroundMuted }}>{target.slice(0, slash + 1)}</Text>
+                    <Text style={{ color: colors.foreground, fontWeight: "600" }}>
+                      {target.slice(slash + 1)}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={{ color: colors.foreground }}>{target}</Text>
+                )}
+              </Text>
+              {diff ? (
+                <Text style={{ fontSize: 11, fontFamily: mono }}>
+                  <Text style={{ color: colors.statusSuccess }}>+{diff.added}</Text>{" "}
+                  <Text style={{ color: colors.statusDanger }}>−{diff.removed}</Text>
+                </Text>
+              ) : null}
+            </View>
           ) : null}
           {output ? (
             <ScrollView style={{ maxHeight: 320 }} contentContainerStyle={{ paddingVertical: 6 }}>
