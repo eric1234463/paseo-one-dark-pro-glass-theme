@@ -8,10 +8,13 @@ registers the theme with one `client.addTheme` call — Paseo expands the 8-colo
 palette into its full dark-theme token set.
 
 It also compacts the agent timeline (`client/tool-line.tsx`): every tool call
-except plans renders as one line with an icon, tool name, summary and status.
-Tap a line to expand its output; failed calls start expanded. Plans, permission
-prompts and assistant messages keep Paseo's native rendering. Expanded output
-keeps only the last 8000 characters.
+except plans collapses to one line with a colored action (Ran, Read, Edited…),
+the target (filename highlighted, shell command syntax-colored) and status.
+Tap a line to open a box with the full command and output, or a diff with
+One Dark Pro syntax colors; failed calls start open. MCP tool calls
+(`mcp__<server>__<tool>`) are hidden unless they fail. Plans, permission
+prompts and assistant messages keep Paseo's native rendering. Expanded shell
+output keeps the last 8000 characters; diffs keep the first 8000.
 
 ## Known limitation
 
