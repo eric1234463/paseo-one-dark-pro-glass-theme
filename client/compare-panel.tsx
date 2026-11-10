@@ -11,11 +11,26 @@ function CompareWorkspacePanel({ workspaceId, theme }: PluginWorkspacePanelProps
 }
 
 export function contributeComparePanel(client: PluginClientContext) {
-  return client.addWorkspacePanel({
+  const removePanel = client.addWorkspacePanel({
     id: "compare-diff",
     title: "Compare",
     icon: "GitBranch",
     locations: ["workspace"],
     Component: CompareWorkspacePanel,
   });
+  // Fallback opener in case the host's `+` panel menu only lists built-ins.
+  const removeCommand = client.addCommandCenterItem({
+    id: "open-compare",
+    title: "Open Compare",
+    icon: "GitBranch",
+    keywords: ["diff", "branch", "compare"],
+    context: "workspace",
+    onSelect: (ctx) => {
+      ctx.openPanel("compare-diff");
+    },
+  });
+  return () => {
+    removePanel();
+    removeCommand();
+  };
 }

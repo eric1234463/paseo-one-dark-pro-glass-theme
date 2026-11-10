@@ -21,7 +21,8 @@ view in `client/compare-view.tsx`), beside Paseo's native Diff tab: pick any
 base branch and diff the current branch against it (`base...HEAD`), which
 the native diff view cannot do. The file list stays collapsed until you tap
 a file; expanded files render hunks in One Dark Pro syntax colors with an
-ignore-whitespace toggle.
+ignore-whitespace toggle. Open it from the workspace `+` panel menu, or via
+Command Center → Open Compare.
 
 ## Known limitation
 
