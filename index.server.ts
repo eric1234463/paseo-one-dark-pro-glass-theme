@@ -7,6 +7,8 @@ import { compareDiffRpc, compareInfoRpc } from "./shared/compare";
 // as argv — never through a shell — so user input cannot inject options.
 
 const MAX_DIFF_CHARS = 120000;
+// Large enough that clipping (above) decides, not the child-process buffer.
+const GIT_MAX_BUFFER = 32 * 1024 * 1024;
 const REF_RE = /^[A-Za-z0-9._\/-]+$/;
 
 async function resolveCwd(
@@ -109,7 +111,7 @@ export default function contribute(server: PluginServerContext) {
     if (input.ignoreWhitespace) args.push("--ignore-all-space");
     args.push(`${baseRef}...HEAD`, "--");
     try {
-      const res = await execCommand("git", args, { cwd, maxBuffer: MAX_DIFF_CHARS * 4 });
+      const res = await execCommand("git", args, { cwd, maxBuffer: GIT_MAX_BUFFER });
       const diff = res.stdout;
       const truncated = diff.length > MAX_DIFF_CHARS;
       return {
@@ -123,7 +125,9 @@ export default function contribute(server: PluginServerContext) {
       const msg = e instanceof Error ? e.message : String(e);
       const hint = msg.includes("unknown revision") || msg.includes("bad revision")
         ? `Unknown base ref "${baseRef}".`
-        : msg.split("\n").slice(0, 3).join("\n");
+        : /maxbuffer/i.test(msg)
+          ? "Diff is too large to load (over ~32 MB). Pick a closer base branch."
+          : msg.split("\n").slice(0, 3).join("\n");
       return { diff: "", truncated: false, currentBranch, baseRef, error: hint };
     }
   });

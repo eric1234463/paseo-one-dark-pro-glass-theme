@@ -1,17 +1,15 @@
-import type {
-  PluginClientContext,
-  PluginWorkspacePanelProps,
-} from "@getpaseo/plugin/client";
 import { useRpc } from "@getpaseo/plugin/client";
+import type { PluginTheme } from "@getpaseo/plugin";
 import { Icon, TextInput } from "@getpaseo/plugin/client/ui";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { compareDiffRpc, compareInfoRpc } from "../shared/compare";
 import { highlightCode, tint, Tokens } from "./syntax";
 
-// Compare panel: current branch vs a selectable base branch.
+// Compare view: current branch vs a selectable base branch.
 // Paseo's native diff has no branch picker; the daemon runs git and this
-// panel renders the unified diff with the One Dark Pro colors.
+// renders the unified diff with the One Dark Pro colors. Collapsed by
+// default: file list only, diff renders on expand.
 
 type FileSection = {
   path: string;
@@ -101,7 +99,7 @@ function FileDiff({
   );
 }
 
-function ComparePanel({ workspaceId, theme }: PluginWorkspacePanelProps) {
+export function CompareView({ workspaceId, theme }: { workspaceId: string; theme: PluginTheme }) {
   const colors = theme.colors;
   const mono = "monospace";
   const getInfo = useRpc(compareInfoRpc);
@@ -429,13 +427,4 @@ function ComparePanel({ workspaceId, theme }: PluginWorkspacePanelProps) {
       </ScrollView>
     </View>
   );
-}
-
-export function contributeComparePanel(client: PluginClientContext) {
-  return client.addWorkspacePanel({
-    id: "compare",
-    title: "Compare",
-    icon: "GitBranch",
-    Component: ComparePanel,
-  });
 }
