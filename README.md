@@ -16,11 +16,11 @@ One Dark Pro syntax colors; failed calls start open. MCP tool calls
 prompts and assistant messages keep Paseo's native rendering. Expanded shell
 output keeps the last 8000 characters; diffs keep the first 8000.
 
-It also adds a Compare entry in the left sidebar (`client/compare-screen.tsx`,
-view in `client/compare-view.tsx`): pick a workspace, then pick any base
-branch and diff the current branch against it (`base...HEAD`), which Paseo's
-native diff view cannot do. The file list stays collapsed until you tap a
-file; expanded files render hunks in One Dark Pro syntax colors with an
+It also adds a Compare tab in the workspace view (`client/compare-panel.tsx`,
+view in `client/compare-view.tsx`), beside Paseo's native Diff tab: pick any
+base branch and diff the current branch against it (`base...HEAD`), which
+the native diff view cannot do. The file list stays collapsed until you tap
+a file; expanded files render hunks in One Dark Pro syntax colors with an
 ignore-whitespace toggle.
 
 ## Known limitation

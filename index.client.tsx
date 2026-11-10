@@ -1,5 +1,5 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
-import { contributeCompare } from "./client/compare-screen";
+import { contributeComparePanel } from "./client/compare-panel";
 import { contributeToolLine } from "./client/tool-line";
 
 // One Dark Pro Glass — follows upstream bukitoka/one-dark-pro-max
@@ -27,9 +27,9 @@ export default function contribute(client: PluginClientContext) {
     },
   });
   const removeToolLine = contributeToolLine(client);
-  const removeCompare = contributeCompare(client);
+  const removeComparePanel = contributeComparePanel(client);
   return () => {
     removeToolLine();
-    removeCompare();
+    removeComparePanel();
   };
 }
