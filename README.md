@@ -24,7 +24,9 @@ One Dark Pro syntax colors. All calls start collapsed, including failures,
 which retain a visible error icon. File rows can expand to show their full path.
 MCP tool calls stay visible while running and after completion, with an MCP
 label and server.tool name so you can follow the agent's direction. Both
-`mcp__<server>__<tool>` and namespaced `server.tool` plain-text calls are recognized.
+`mcp__<server>__<tool>` and namespaced `server.tool` calls with plain-text or
+unknown detail are recognized. Codex history can expose MCP calls as unknown
+detail; these keep their MCP styling rather than falling back to generic tools.
 Plans, permission
 prompts and assistant messages keep Paseo's native rendering. Expanded shell
 output keeps the last 8000 characters; diffs keep the first 8000.

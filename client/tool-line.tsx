@@ -99,7 +99,7 @@ function describe(item: ToolCallItem): Described {
   const detail = item.detail;
   // Providers expose MCP names as mcp__server__tool or namespaced server.tool.
   if (item.name.startsWith("mcp__") ||
-      (detail.type === "plain_text" && /^[\w-]+\.[\w.-]+$/.test(item.name))) {
+      ((detail.type === "plain_text" || detail.type === "unknown") && /^[\w-]+\.[\w.-]+$/.test(item.name))) {
     return described(
       "mcp",
       item.name.replace(/^mcp__/, "").replace("__", "."),
