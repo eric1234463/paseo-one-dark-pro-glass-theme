@@ -10,7 +10,7 @@ import { z } from "zod";
 import { SYNTAX, highlightCode, tint, Tokens } from "./syntax";
 import type { Token } from "./syntax";
 
-// Collapses every tool call except plans into one colored line; tapping it opens
+// Collapses every tool call except plans into one neutral line; tapping it opens
 // a box with the full command, output or highlighted diff. MCP tool calls are
 // hidden unless they failed. Icon names are Lucide export names (PascalCase):
 // the host looks them up on the lucide module and renders nothing for kebab-case.
@@ -175,11 +175,11 @@ function highlightShell(command: string): Token[] {
 
 function ToolLine({ item, theme, layout }: PluginTimelineItemProps<ToolLineData>) {
   const { action, icon, title, target, isPath, status, output, diff } = item.data;
-  const [expanded, setExpanded] = useState(status === "failed");
+  const [expanded, setExpanded] = useState(false);
   const colors = theme.colors;
   const mono = layout.platform === "ios" ? "Menlo" : "monospace";
   const isShell = action === "shell";
-  const expandable = isShell || Boolean(output);
+  const expandable = Boolean(target || output);
   const actionColor = status === "failed" ? colors.statusDanger : ACTIONS[action].color;
   const statusIcon =
     status === "failed"
@@ -235,45 +235,35 @@ function ToolLine({ item, theme, layout }: PluginTimelineItemProps<ToolLineData>
   };
 
   return (
-    <View style={{ marginVertical: 2 }}>
+    <View
+      style={{
+        marginVertical: 2,
+        borderWidth: 1,
+        borderColor: tint(colors.border, "99"),
+        borderRadius: 10,
+        backgroundColor: colors.surface1,
+        overflow: "hidden",
+      }}
+    >
       <Pressable
         onPress={() => setExpanded((value) => !value)}
         disabled={!expandable}
+        accessibilityRole="button"
+        accessibilityLabel={[isShell ? "" : title, target, status].filter(Boolean).join(" ")}
+        accessibilityState={{ expanded, disabled: !expandable }}
         style={{
           flexDirection: "row",
           alignItems: "center",
-          gap: 6,
-          paddingVertical: 4,
-          paddingHorizontal: 6,
-          borderLeftWidth: 2,
-          borderLeftColor: actionColor,
-          borderRadius: 4,
-          // Tinted row so tool output stands apart from assistant prose.
-          backgroundColor: tint(actionColor, expanded ? "26" : "14"),
+          gap: 8,
+          minHeight: layout.compact ? 44 : 36,
+          paddingVertical: 6,
+          paddingHorizontal: 10,
         }}
       >
-        <View style={{ width: 12 }}>
-          {expandable ? (
-            <Icon
-              name={expanded ? "ChevronDown" : "ChevronRight"}
-              size={12}
-              color={colors.foregroundMuted}
-            />
-          ) : null}
-        </View>
-        <Icon name={icon} size={13} color={actionColor} />
-        <Text style={{ color: actionColor, fontSize: 12, fontWeight: "600" }}>{title}</Text>
-        <Text numberOfLines={1} style={{ flex: 1, fontSize: 12, fontFamily: mono }}>
-          {isShell ? (
-            <Tokens tokens={highlightShell(target.split("\n")[0])} fallback={colors.foreground} />
-          ) : isPath && slash >= 0 ? (
-            <>
-              <Text style={{ color: colors.foregroundMuted }}>{target.slice(0, slash + 1)}</Text>
-              <Text style={{ color: colors.foreground }}>{target.slice(slash + 1)}</Text>
-            </>
-          ) : (
-            <Text style={{ color: colors.foregroundMuted }}>{target.split("\n")[0]}</Text>
-          )}
+        <Icon name={icon} size={14} color={colors.foregroundMuted} />
+        <Text numberOfLines={1} style={{ flex: 1, color: colors.foreground, fontSize: 14, fontFamily: isShell ? mono : undefined }}>
+          {!isShell && title ? <Text style={{ color: colors.foregroundMuted }}>{title}{target ? " " : ""}</Text> : null}
+          {isPath ? target.slice(slash + 1) : target.split("\n")[0]}
         </Text>
         {diff ? (
           <Text style={{ fontSize: 11, fontFamily: mono }}>
@@ -282,16 +272,15 @@ function ToolLine({ item, theme, layout }: PluginTimelineItemProps<ToolLineData>
           </Text>
         ) : null}
         {statusIcon && <Icon name={statusIcon.name} size={12} color={statusIcon.color} />}
+        {expandable ? <Icon name={expanded ? "ChevronDown" : "ChevronRight"} size={14} color={colors.foregroundMuted} /> : null}
       </Pressable>
       {expanded ? (
         <View
           style={{
-            marginTop: 2,
-            marginLeft: 8,
+            margin: 10,
+            marginTop: 0,
             borderWidth: 1,
-            borderLeftWidth: 3,
-            borderColor: tint(actionColor, "55"),
-            borderLeftColor: actionColor,
+            borderColor: tint(colors.border, "66"),
             borderRadius: 6,
             backgroundColor: colors.surface0,
             overflow: "hidden",
@@ -305,9 +294,9 @@ function ToolLine({ item, theme, layout }: PluginTimelineItemProps<ToolLineData>
                 gap: 8,
                 paddingHorizontal: 8,
                 paddingVertical: 6,
-                backgroundColor: tint(actionColor, "1F"),
+                backgroundColor: colors.surface0,
                 borderBottomWidth: output ? 1 : 0,
-                borderBottomColor: tint(actionColor, "55"),
+                borderBottomColor: tint(colors.border, "66"),
               }}
             >
               <Text selectable style={{ flex: 1, fontSize: 12, fontFamily: mono }}>

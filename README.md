@@ -8,10 +8,12 @@ Paseo expands the 8-color palette into its full dark-theme token set.
 `index.server.ts` runs the git commands behind the Compare panel.
 
 It also compacts the agent timeline (`client/tool-line.tsx`): every tool call
-except plans collapses to one line with a colored action (Ran, Read, Edited…),
-the target (filename highlighted, shell command syntax-colored) and status.
+except plans collapses to one neutral, subtly bordered line with a tool icon,
+the command or filename, status and a trailing expand arrow. Shell rows omit
+the redundant Ran label; syntax colors are reserved for expanded details.
 Tap a line to open a box with the full command and output, or a diff with
-One Dark Pro syntax colors; failed calls start open. MCP tool calls
+One Dark Pro syntax colors. All calls start collapsed, including failures,
+which retain a visible error icon. File rows can expand to show their full path. MCP tool calls
 (`mcp__<server>__<tool>`) are hidden unless they fail. Plans, permission
 prompts and assistant messages keep Paseo's native rendering. Expanded shell
 output keeps the last 8000 characters; diffs keep the first 8000.
