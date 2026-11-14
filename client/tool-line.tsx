@@ -11,8 +11,8 @@ import { SYNTAX, highlightCode, tint, Tokens } from "./syntax";
 import type { Token } from "./syntax";
 
 // Collapses every tool call except plans into one neutral line; tapping it opens
-// a box with the full command, output or highlighted diff. MCP tool calls are
-// hidden unless they failed. Icon names are Lucide export names (PascalCase):
+// a box with the full command, output or highlighted diff. MCP calls remain
+// visible while running and after completion. Icon names are Lucide export names (PascalCase):
 // the host looks them up on the lucide module and renders nothing for kebab-case.
 
 const KIND = "tool-line";
@@ -29,6 +29,7 @@ const ACTIONS = {
   fetch: { icon: "Globe", title: "Fetched", color: SYNTAX.operator },
   worktree: { icon: "GitBranch", title: "Worktree", color: SYNTAX.string },
   agent: { icon: "Bot", title: "Agent", color: SYNTAX.keyword },
+  mcp: { icon: "Plug", title: "MCP", color: SYNTAX.number },
   other: { icon: "Wrench", title: "", color: SYNTAX.comment },
 } as const;
 
@@ -96,6 +97,15 @@ function shellCommand(command: string): string {
 
 function describe(item: ToolCallItem): Described {
   const detail = item.detail;
+  // Providers expose MCP names as mcp__server__tool or namespaced server.tool.
+  if (item.name.startsWith("mcp__") ||
+      (detail.type === "plain_text" && /^[\w-]+\.[\w.-]+$/.test(item.name))) {
+    return described(
+      "mcp",
+      item.name.replace(/^mcp__/, "").replace("__", "."),
+      detail.type === "plain_text" ? detail.text ?? "" : stringify(detail),
+    );
+  }
   switch (detail.type) {
     case "shell":
       return described("shell", shellCommand(detail.command), detail.output ?? "");
@@ -355,8 +365,6 @@ export function contributeToolLine(client: PluginClientContext) {
     query: { itemType: "tool_call" },
     transform: ({ item }) => {
       if (item.detail.type === "plan") return undefined;
-      // MCP calls (mcp__<server>__<tool>) are noise; keep failures visible.
-      if (item.name.startsWith("mcp__") && item.status !== "failed") return { items: [] };
       const base = describe(item);
       const error = item.status === "failed" ? stringify(item.error) : "";
       const data: ToolLineData = {
