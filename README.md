@@ -9,7 +9,10 @@ Paseo expands the 8-color palette into its full dark-theme token set.
 
 It also compacts the agent timeline (`client/tool-line.tsx`): every tool call
 except plans collapses to one neutral, subtly bordered line with a tool icon,
-the command or filename, status and a trailing expand arrow. Shell rows omit
+the command or filename, status and a trailing expand arrow. Icons and action
+labels distinguish tool types: blue shell, green reads, yellow edits/writes,
+cyan searches/fetches and purple agents. Failures override these with red.
+Shell rows omit
 the redundant Ran label; syntax colors are reserved for expanded details.
 Tap a line to open a box with the full command and output, or a diff with
 One Dark Pro syntax colors. All calls start collapsed, including failures,

@@ -22,10 +22,10 @@ const MAX_OUTPUT = 8000;
 
 const ACTIONS = {
   shell: { icon: "SquareTerminal", title: "Ran", color: SYNTAX.function },
-  read: { icon: "Eye", title: "Read", color: SYNTAX.comment },
+  read: { icon: "Eye", title: "Read", color: SYNTAX.string },
   edit: { icon: "Pencil", title: "Edited", color: SYNTAX.type },
   write: { icon: "FilePlus", title: "Wrote", color: SYNTAX.type },
-  search: { icon: "Search", title: "Searched", color: SYNTAX.comment },
+  search: { icon: "Search", title: "Searched", color: SYNTAX.operator },
   fetch: { icon: "Globe", title: "Fetched", color: SYNTAX.operator },
   worktree: { icon: "GitBranch", title: "Worktree", color: SYNTAX.string },
   agent: { icon: "Bot", title: "Agent", color: SYNTAX.keyword },
@@ -260,9 +260,9 @@ function ToolLine({ item, theme, layout }: PluginTimelineItemProps<ToolLineData>
           paddingHorizontal: 10,
         }}
       >
-        <Icon name={icon} size={14} color={colors.foregroundMuted} />
+        <Icon name={icon} size={14} color={actionColor} />
         <Text numberOfLines={1} style={{ flex: 1, color: colors.foreground, fontSize: 14, fontFamily: isShell ? mono : undefined }}>
-          {!isShell && title ? <Text style={{ color: colors.foregroundMuted }}>{title}{target ? " " : ""}</Text> : null}
+          {!isShell && title ? <Text style={{ color: actionColor }}>{title}{target ? " " : ""}</Text> : null}
           {isPath ? target.slice(slash + 1) : target.split("\n")[0]}
         </Text>
         {diff ? (
