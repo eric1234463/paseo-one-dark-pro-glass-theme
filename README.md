@@ -17,8 +17,10 @@ except plans collapses to one neutral, subtly bordered line with a tool icon,
 the command or filename, status and a trailing expand arrow. Icons and action
 labels distinguish tool types: blue shell, green reads, yellow edits/writes,
 cyan searches/fetches, purple agents and orange MCP calls. Failures override these with red.
-Shell rows omit
-the redundant Ran label; syntax colors are reserved for expanded details.
+Every row uses the same icon, colored category prefix and target layout:
+Shell, Read, Edit, Write, Search, Fetch, Worktree, Agent, MCP or Tool.
+Prefixes share the same typography; shell targets retain a monospace font.
+Syntax colors are reserved for expanded details.
 Tap a line to open a box with the full command and output, or a diff with
 One Dark Pro syntax colors. All calls start collapsed, including failures,
 which retain a visible error icon. File rows can expand to show their full path.

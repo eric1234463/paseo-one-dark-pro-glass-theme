@@ -21,16 +21,16 @@ const VERSION = 3;
 const MAX_OUTPUT = 8000;
 
 const ACTIONS = {
-  shell: { icon: "SquareTerminal", title: "Ran", color: SYNTAX.function },
+  shell: { icon: "SquareTerminal", title: "Shell", color: SYNTAX.function },
   read: { icon: "Eye", title: "Read", color: SYNTAX.string },
-  edit: { icon: "Pencil", title: "Edited", color: SYNTAX.type },
-  write: { icon: "FilePlus", title: "Wrote", color: SYNTAX.type },
-  search: { icon: "Search", title: "Searched", color: SYNTAX.operator },
-  fetch: { icon: "Globe", title: "Fetched", color: SYNTAX.operator },
+  edit: { icon: "Pencil", title: "Edit", color: SYNTAX.type },
+  write: { icon: "FilePlus", title: "Write", color: SYNTAX.type },
+  search: { icon: "Search", title: "Search", color: SYNTAX.operator },
+  fetch: { icon: "Globe", title: "Fetch", color: SYNTAX.operator },
   worktree: { icon: "GitBranch", title: "Worktree", color: SYNTAX.string },
   agent: { icon: "Bot", title: "Agent", color: SYNTAX.keyword },
   mcp: { icon: "Plug", title: "MCP", color: SYNTAX.number },
-  other: { icon: "Wrench", title: "", color: SYNTAX.comment },
+  other: { icon: "Wrench", title: "Tool", color: SYNTAX.comment },
 } as const;
 
 type Action = keyof typeof ACTIONS;
@@ -259,7 +259,7 @@ function ToolLine({ item, theme, layout }: PluginTimelineItemProps<ToolLineData>
         onPress={() => setExpanded((value) => !value)}
         disabled={!expandable}
         accessibilityRole="button"
-        accessibilityLabel={[isShell ? "" : title, target, status].filter(Boolean).join(" ")}
+        accessibilityLabel={[ACTIONS[action].title, title === ACTIONS[action].title ? "" : title, target, status].filter(Boolean).join(" ")}
         accessibilityState={{ expanded, disabled: !expandable }}
         style={{
           flexDirection: "row",
@@ -271,8 +271,9 @@ function ToolLine({ item, theme, layout }: PluginTimelineItemProps<ToolLineData>
         }}
       >
         <Icon name={icon} size={14} color={actionColor} />
+        <Text style={{ color: actionColor, fontSize: 14, flexShrink: 0 }}>{ACTIONS[action].title}</Text>
         <Text numberOfLines={1} style={{ flex: 1, color: colors.foreground, fontSize: 14, fontFamily: isShell ? mono : undefined }}>
-          {!isShell && title ? <Text style={{ color: actionColor }}>{title}{target ? " " : ""}</Text> : null}
+          {title !== ACTIONS[action].title && title ? `${title}${target ? " " : ""}` : null}
           {isPath ? target.slice(slash + 1) : target.split("\n")[0]}
         </Text>
         {diff ? (
