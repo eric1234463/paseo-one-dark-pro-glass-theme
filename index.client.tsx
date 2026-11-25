@@ -1,5 +1,6 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
 import { contributeComparePanel } from "./client/compare-panel";
+import { WorkspaceSidebar } from "./client/workspace-sidebar";
 import { contributeToolLine } from "./client/tool-line";
 
 // One Dark Pro Glass — follows upstream bukitoka/one-dark-pro-max
@@ -28,8 +29,14 @@ export default function contribute(client: PluginClientContext) {
   });
   const removeToolLine = contributeToolLine(client);
   const removeComparePanel = contributeComparePanel(client);
+  const removeWorkspaceSidebar = client.addSidebarView({
+    id: "working-done",
+    title: "Working / Done",
+    Component: WorkspaceSidebar,
+  });
   return () => {
     removeToolLine();
     removeComparePanel();
+    removeWorkspaceSidebar();
   };
 }

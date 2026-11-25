@@ -134,7 +134,7 @@ function describe(item: ToolCallItem): Described {
     case "worktree_setup":
       return described("worktree", detail.branchName, detail.log);
     case "sub_agent":
-      return described("agent", detail.description ?? "", detail.log, {
+      return described("agent", detail.description ?? "", detail.log ?? "", {
         title: detail.subAgentType ?? "Agent",
       });
     case "plain_text":
