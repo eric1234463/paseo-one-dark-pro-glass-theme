@@ -3,35 +3,25 @@
 Paseo theme plugin ported from `~/.config/otty/themes/one-dark-pro-glass.ottytheme`
 (itself a port of bukitoka/one-dark-pro-max `one-dark-pro-glass.json` for Zed).
 
-The UI prioritizes supervising the agent's direction: keep actions, targets and
-running or failed states visible so you can stop or redirect work early.
-Collapse detailed output, rather than hiding tool activity; use color to help
-scan tool categories without replacing readable names and status icons.
-
 `index.client.tsx` registers the theme with one `client.addTheme` call —
 Paseo expands the 8-color palette into its full dark-theme token set.
 `index.server.ts` runs the git commands behind the Compare panel.
 
-It also compacts the agent timeline (`client/tool-line.tsx`): every tool call
-except plans collapses to one neutral, subtly bordered line with a tool icon,
-the command or filename, status and a trailing expand arrow. Icons and action
-labels distinguish tool types: blue shell, green reads, yellow edits/writes,
-cyan searches/fetches, purple agents and orange MCP calls. Failures override these with red.
-Every row uses the same icon, colored category prefix and target layout:
-Shell, Read, Edit, Write, Search, Fetch, Worktree, Agent, MCP or Tool.
-Prefixes share the same typography; shell targets retain a monospace font.
-Syntax colors are reserved for expanded details.
-Tap a line to open a box with the full command and output, or a diff with
-One Dark Pro syntax colors. All calls start collapsed, including failures,
-which retain a visible error icon. File rows can expand to show their full path.
-MCP tool calls stay visible while running and after completion, with an MCP
-label and server.tool name so you can follow the agent's direction. Both
-`mcp__<server>__<tool>` and namespaced `server.tool` calls with plain-text or
-unknown detail are recognized. Codex history can expose MCP calls as unknown
-detail; these keep their MCP styling rather than falling back to generic tools.
-Plans, permission
-prompts and assistant messages keep Paseo's native rendering. Expanded shell
-output keeps the last 8000 characters; diffs keep the first 8000.
+## Agent timeline
+
+In Paseo, open **Settings → Chat** and set **Chat display** to
+**Collapse tool calls**. Consecutive calls share a collapsed disclosure. On a
+phone, tap the group to open its activity sheet, then tap a call to inspect its
+details. A standalone call keeps its own native row. A sub-agent that
+returns a log without a child session has a separate, collapsed **Agent log**
+row so you can still inspect that output. Keep **Expand thinking** off to open
+raw reasoning on demand.
+
+Assistant messages, including interim explanations, rendered Markdown tables
+and final replies, stay in the timeline alongside user messages, plans and
+permission prompts. Paseo owns the display setting and remembers the choice
+for the client. **Collapse turns** also folds interim messages after a turn
+ends, and **Full** shows each tool call separately.
 
 It also adds a Compare tab in the workspace view (`client/compare-panel.tsx`,
 view in `client/compare-view.tsx`), beside Paseo's native Diff tab: pick any

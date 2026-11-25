@@ -1,7 +1,7 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
+import { contributeAgentLog } from "./client/agent-log";
 import { contributeComparePanel } from "./client/compare-panel";
 import { WorkspaceSidebar } from "./client/workspace-sidebar";
-import { contributeToolLine } from "./client/tool-line";
 
 // One Dark Pro Glass — follows upstream bukitoka/one-dark-pro-max
 // `themes/one-dark-pro-glass.json` (Zed, glass author BoyeDarat),
@@ -27,7 +27,7 @@ export default function contribute(client: PluginClientContext) {
       ring: "#4E5666", // scrollbar.thumb, alpha stripped (#4E566680)
     },
   });
-  const removeToolLine = contributeToolLine(client);
+  const removeAgentLog = contributeAgentLog(client);
   const removeComparePanel = contributeComparePanel(client);
   const removeWorkspaceSidebar = client.addSidebarView({
     id: "working-done",
@@ -35,7 +35,7 @@ export default function contribute(client: PluginClientContext) {
     Component: WorkspaceSidebar,
   });
   return () => {
-    removeToolLine();
+    removeAgentLog();
     removeComparePanel();
     removeWorkspaceSidebar();
   };
