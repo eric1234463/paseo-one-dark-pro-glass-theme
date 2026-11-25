@@ -12,7 +12,7 @@ type Colors = PluginSidebarViewProps["theme"]["colors"];
 type WorkspaceList = ReturnType<typeof getPaseoClient>["workspaces"]["list"];
 type PullRequest = NonNullable<NonNullable<Awaited<ReturnType<WorkspaceList>>["entries"][number]["githubRuntime"]>["pullRequest"]>;
 type ProviderDisplay = { label: string; iconSvg?: string };
-type ArchiveTarget = { reference: WorkspaceRef; title: string; worktree: boolean };
+type ArchiveTarget = { reference: WorkspaceRef; title: string; directory: string; worktree: boolean };
 
 function ActivityIcon({ color, size, animate }: { color: string; size: number; animate: boolean }) {
   const [rotation] = useState(() => new Animated.Value(0));
@@ -145,7 +145,11 @@ function WorkspaceRow({
     state === "open" || state === "opened" ? "Open" : pullRequest.state
   );
   const prLabel = pullRequest && (pullRequest.number === undefined ? prState : `#${pullRequest.number} ${prState}`);
-  const checks = pullRequest?.checksStatus;
+  const individualChecks = pullRequest?.checks;
+  const checks = individualChecks?.length
+    ? individualChecks.some((check) => check.status === "failure") ? "failure"
+      : individualChecks.some((check) => check.status === "pending") ? "pending" : "success"
+    : pullRequest?.checksStatus;
   const check = checks === "success" ? { icon: "Check", label: "Checks passed", color: colors.statusSuccess } :
     checks === "failure" ? { icon: "CircleX", label: "Checks failed", color: colors.statusDanger } :
     checks === "pending" ? { icon: "LoaderCircle", label: "Checks pending", color: colors.statusWarning } :
@@ -215,7 +219,12 @@ function WorkspaceRow({
         accessibilityLabel={`Archive ${title}`}
         accessibilityState={{ disabled: Boolean(workspace.archivingAt) }}
         disabled={Boolean(workspace.archivingAt)}
-        onPress={() => onArchive({ reference, title, worktree: workspace.kind === "worktree" })}
+        onPress={() => onArchive({
+          reference,
+          title,
+          directory: workspace.directory,
+          worktree: workspace.kind === "worktree",
+        })}
         style={[styles.archiveAction, layout.compact && styles.touchAction]}
       >
         <Icon name="Archive" size={15} color={colors.foregroundMuted} />
@@ -255,6 +264,10 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
   }, []);
 
   const hosts = useHosts().filter((host) => host.status === "online");
+  const archiveHostId = archiveTarget?.reference.hostId;
+  const archiveHost = hosts.find((host) => host.serverId === archiveHostId);
+  const archiveHostLabel = archiveHost && hosts.some((host) => host.serverId !== archiveHostId && host.label === archiveHost.label)
+    ? `${archiveHost.label} (${archiveHostId})` : archiveHost?.label ?? archiveHostId;
   const projects = useProjects({ hosts: hosts.map((host) => host.serverId), orderBy: "displayName" });
   const providerCatalogs = useQueries({
     queries: hosts.map(({ serverId }) => ({
@@ -269,9 +282,10 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
   const providersByHost = new Map(hosts.map(({ serverId }, index) => [serverId, providerCatalogs[index]?.data]));
   const activeAgent = props.active.agent?.key;
   const providerByWorkspace = new Map(useAgents({
-    where: (agent) => !agent.background && (agent.parentAgentId === null || agent.ref.key === activeAgent),
+    where: (agent) => !agent.background,
     orderBy: (left, right) =>
       Number(right.ref.key === activeAgent) - Number(left.ref.key === activeAgent) ||
+      Number(left.parentAgentId !== null) - Number(right.parentAgentId !== null) ||
       right.lastActivityAt.localeCompare(left.lastActivityAt),
     groupBy: (agent) => ({ key: agent.workspace.key, title: agent.provider }),
   }).map((group) => [group.key, group.title]));
@@ -433,6 +447,10 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
         >
           <Modal.Content>
             <Text style={[styles.workspaceTitle, { color: colors.foreground }]}>{archiveTarget.title}</Text>
+            <Text style={{ color: colors.foregroundMuted }}>
+              {archiveHostLabel}
+              {"\n"}{archiveTarget.directory}
+            </Text>
             <Text style={{ color: colors.foregroundMuted }}>
               This archives the workspace and its agents, and stops any running agents and terminals.
               {archiveTarget.worktree && " Paseo may remove the worktree and discard uncommitted changes."}
