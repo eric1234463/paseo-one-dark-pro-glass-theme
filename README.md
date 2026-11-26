@@ -64,6 +64,6 @@ npm run typecheck
 paseo plugin install /Users/eric/personal-project/paseo-one-dark-pro-glass-theme
 ```
 
-Requires Paseo daemon and client 0.17.4 or later. Then pick
+Requires Paseo daemon and client 0.17.3 or later. Then pick
 **One Dark Pro Glass** under Settings → Appearance. Requires
 **Enable plugins** on the target daemon.
