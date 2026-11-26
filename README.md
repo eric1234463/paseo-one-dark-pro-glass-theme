@@ -1,10 +1,12 @@
-# One Dark Pro Glass for Paseo
+# One Dark Pro Night Flat for Paseo
 
-Paseo theme plugin ported from `~/.config/otty/themes/one-dark-pro-glass.ottytheme`
-(itself a port of bukitoka/one-dark-pro-max `one-dark-pro-glass.json` for Zed).
+Paseo theme adapted from [One Dark Pro Night Flat](https://t3themes.com/themes/one-dark-pro-night-flat/)
+by pantharshit007. The original Glass palette came from Otty's
+`one-dark-pro-glass.ottytheme`, a port of bukitoka/one-dark-pro-max's
+`one-dark-pro-glass.json` for Zed.
 
 `index.client.tsx` registers the theme with one `client.addTheme` call —
-Paseo expands the 8-color palette into its full dark-theme token set.
+Paseo fills in the remaining dark-theme tokens.
 `index.server.ts` runs the git commands behind the Compare panel.
 
 ## Agent timeline
@@ -55,12 +57,6 @@ Provider icons come from the connected host when available. The bundled fallback
 icons are sourced from [Paseo v0.17.4](https://github.com/getpaseo/paseo/tree/v0.17.4/packages/app/src/assets/acp-provider-icons).
 See the [upstream license notice](client/PROVIDER-ICONS-LICENSE.txt).
 
-## Known limitation
-
-Paseo themes are opaque hex only, so the glass translucency (alpha window
-background, transparent panels, vibrancy) cannot transfer. `background` uses
-the opaque base `#080909`.
-
 ## Install
 
 ```bash
@@ -69,5 +65,5 @@ paseo plugin install /Users/eric/personal-project/paseo-one-dark-pro-glass-theme
 ```
 
 Requires Paseo daemon and client 0.17.3 or later. Then pick
-**One Dark Pro Glass** under Settings → Appearance. Requires
+**One Dark Pro Night Flat** under Settings → Appearance. Requires
 **Enable plugins** on the target daemon.

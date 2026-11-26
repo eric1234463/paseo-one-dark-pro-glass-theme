@@ -1,6 +1,6 @@
 {
   "id": "paseo-one-dark-pro-glass-theme",
-  "description": "One Dark Pro Glass — One Dark Pro Max on a near-black backdrop, ported from the Otty theme, with a Working / Done sidebar and a Compare panel.",
+  "description": "One Dark Pro Night Flat for Paseo, with a Working / Done sidebar and a Compare panel.",
   "requirements": {
     "paseo": ">=0.17.3"
   }
