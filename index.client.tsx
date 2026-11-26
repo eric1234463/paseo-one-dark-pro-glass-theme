@@ -14,7 +14,7 @@ export default function contribute(client: PluginClientContext) {
       background: "#141414",
       foreground: "#F5F5F5",
       raised: "#1B1B1B",
-      control: "#2A2A2A",
+      control: "#2A3A4C", // Shared by Markdown code, table headers, and controls.
       border: "#242424",
       accent: "#51A2FF", // Upstream update foreground for contrast with Paseo's dark button text.
       mutedForeground: "#A3A3A3",
