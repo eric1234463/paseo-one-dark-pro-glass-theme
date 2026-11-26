@@ -23,6 +23,10 @@ permission prompts. Paseo owns the display setting and remembers the choice
 for the client. **Collapse turns** also folds interim messages after a turn
 ends, and **Full** shows each tool call separately.
 
+When a Codex reply includes a concrete follow-up, **Use suggested prompt**
+adds it to the chat draft. You can edit it before sending. Suggestions come
+from the same Codex reply and require Codex CLI 0.121.0 or later.
+
 It also adds a Compare tab in the workspace view (`client/compare-panel.tsx`,
 view in `client/compare-view.tsx`), beside Paseo's native Diff tab: pick any
 base branch and diff the current branch against it (`base...HEAD`), which
@@ -60,6 +64,6 @@ npm run typecheck
 paseo plugin install /Users/eric/personal-project/paseo-one-dark-pro-glass-theme
 ```
 
-Requires Paseo daemon and client 0.16.0 or later. Then pick
+Requires Paseo daemon and client 0.17.4 or later. Then pick
 **One Dark Pro Glass** under Settings → Appearance. Requires
 **Enable plugins** on the target daemon.

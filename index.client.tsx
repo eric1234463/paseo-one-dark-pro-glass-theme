@@ -1,6 +1,7 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
 import { contributeAgentLog } from "./client/agent-log";
 import { contributeComparePanel } from "./client/compare-panel";
+import { contributeNextPrompt } from "./client/next-prompt";
 import { WorkspaceSidebar } from "./client/workspace-sidebar";
 
 // One Dark Pro Glass — follows upstream bukitoka/one-dark-pro-max
@@ -29,6 +30,7 @@ export default function contribute(client: PluginClientContext) {
   });
   const removeAgentLog = contributeAgentLog(client);
   const removeComparePanel = contributeComparePanel(client);
+  const removeNextPrompt = contributeNextPrompt(client);
   const removeWorkspaceSidebar = client.addSidebarView({
     id: "working-done",
     title: "Working / Done",
@@ -37,6 +39,7 @@ export default function contribute(client: PluginClientContext) {
   return () => {
     removeAgentLog();
     removeComparePanel();
+    removeNextPrompt();
     removeWorkspaceSidebar();
   };
 }

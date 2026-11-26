@@ -1,5 +1,6 @@
 import type { PluginHandlerContext, PluginServerContext } from "@getpaseo/plugin/server";
 import { execCommand } from "@getpaseo/plugin/server";
+import { contributeNextPrompt } from "./server/next-prompt";
 import { compareDiffRpc, compareInfoRpc } from "./shared/compare";
 
 // Server side of the Compare panel: runs git in the workspace directory.
@@ -32,6 +33,7 @@ async function git(cwd: string, args: string[]): Promise<string> {
 }
 
 export default function contribute(server: PluginServerContext) {
+  const removeNextPrompt = contributeNextPrompt(server);
   server.handle(compareInfoRpc, async (input, ctx) => {
     const { cwd, error } = await resolveCwd(ctx, input.workspaceId);
     if (!cwd) {
@@ -132,5 +134,5 @@ export default function contribute(server: PluginServerContext) {
     }
   });
 
-  return () => {};
+  return removeNextPrompt;
 }
