@@ -23,9 +23,13 @@ permission prompts. Paseo owns the display setting and remembers the choice
 for the client. **Collapse turns** also folds interim messages after a turn
 ends, and **Full** shows each tool call separately.
 
-When a Codex reply includes a concrete follow-up, **Use suggested prompt**
-adds it to the chat draft. You can edit it before sending. Suggestions come
-from the same Codex reply and require Codex CLI 0.121.0 or later.
+When a Codex reply includes a follow-up, the empty chat input shows it as a
+placeholder on clients that support `composerSuggestion`. Focus the input and
+press **Tab** to turn the suggestion into a draft you can edit before sending.
+Stock Paseo 0.17.4 shows the suggestion in the Codex reply. To enable the
+placeholder, apply the [composer patch](patches/paseo-v0.17.4-composer-suggestion.patch)
+to a Paseo `v0.17.4` checkout with `git apply` and rebuild the client.
+Suggestions require Codex CLI 0.121.0 or later.
 
 It also adds a Compare tab in the workspace view (`client/compare-panel.tsx`,
 view in `client/compare-view.tsx`), beside Paseo's native Diff tab: pick any

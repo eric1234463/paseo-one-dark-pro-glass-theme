@@ -1,0 +1,223 @@
+diff --git a/packages/app/e2e/browser/plugin-timeline.spec.ts b/packages/app/e2e/browser/plugin-timeline.spec.ts
+index aacd7c187b4107649290ee0b0edffdc2c0545677..e99d7eddf2f3d14f35d2628b622b61403a888f70 100644
+--- a/packages/app/e2e/browser/plugin-timeline.spec.ts
++++ b/packages/app/e2e/browser/plugin-timeline.spec.ts
+@@ -1,7 +1,10 @@
++import { expect } from "@playwright/test";
++import { openAgentRoute, seedMockAgentWorkspace } from "../support/helpers/mock-agent";
+ import { test } from "../support/fixtures";
+ import { installDaemonWebSocketGate } from "../support/helpers/daemon-websocket-gate";
+ import {
+   withTimelinePlugin,
++  withDirectoryPlugin,
+   viewInlineThinkingExample,
+   requestPluginTimeline,
+   interactWithStreamingCard,
+@@ -55,3 +58,55 @@ test("inline-thinking example renders a streamed thought through host UI", async
+ }, info) => {
+   await viewInlineThinkingExample(page, info);
+ });
++
++test("Tab accepts a plugin's suggested prompt into an empty composer", async ({ page }) => {
++  const prompt = "Show the diff.";
++  const agent = await seedMockAgentWorkspace({
++    repoPrefix: "prompt-suggestion-",
++    title: "Prompt suggestion",
++  });
++  try {
++    await withDirectoryPlugin({
++      pluginId: "suggested-prompt",
++      source: `import { z } from "zod";
++        export default function contribute(client) {
++          return client.addTimelineRenderer({
++            kind: "follow-up", version: 1, schema: z.object({ prompt: z.string() }),
++            composerSuggestion: ({ prompt }) => prompt, Component: () => null,
++          });
++        }`,
++      serverSource: `export default function contribute(server) {
++        let suggested = false;
++        return server.addHook("agent.turn.after", async ({ agent, turnId }, { paseo }) => {
++          if (suggested) return;
++          suggested = true;
++          await paseo.agents.ref(agent.id).timeline.append({
++            type: "plugin", id: turnId, kind: "follow-up", version: 1, data: {prompt: ${JSON.stringify(prompt)}}
++          });
++        });
++      }`,
++      run: async () => {
++        await openAgentRoute(page, agent);
++        const input = page.getByRole("textbox", { name: "Message agent..." }).first();
++        await input.fill("Keep this draft");
++        await requestPluginTimeline(agent);
++        await expect(input).toHaveAttribute("placeholder", prompt);
++        await input.press("Tab");
++        await expect(input).toHaveValue("Keep this draft");
++        await input.fill("");
++        await input.press("Shift+Tab");
++        await expect(input).toHaveValue("");
++        await input.press("Tab");
++        await expect(input).toBeFocused();
++        await expect(input).toHaveValue(prompt);
++        await page.keyboard.type(" Please.");
++        await expect(input).toHaveValue(prompt + " Please.");
++        await input.press("Enter");
++        await expect(input).toHaveValue("");
++        await expect(input).not.toHaveAttribute("placeholder", prompt);
++      },
++    });
++  } finally {
++    await agent.cleanup();
++  }
++});
+diff --git a/packages/app/e2e/support/helpers/plugin-timeline.ts b/packages/app/e2e/support/helpers/plugin-timeline.ts
+index 923e4fabd78f903bda08cdc7e6a45270306f07cd..28e5e575befa10e7a82bab0f8f36bde41eeb2c30 100644
+--- a/packages/app/e2e/support/helpers/plugin-timeline.ts
++++ b/packages/app/e2e/support/helpers/plugin-timeline.ts
+@@ -143,6 +143,7 @@ export default function contribute(client) {
+ export async function withDirectoryPlugin(options: {
+   pluginId: string;
+   source: string;
++  serverSource?: string;
+   run: () => Promise<void>;
+ }): Promise<void> {
+   const { pluginId, source, run } = options;
+@@ -155,6 +156,8 @@ export async function withDirectoryPlugin(options: {
+       JSON.stringify({ id: pluginId, requirements: pluginRequirements }),
+     );
+     await writeFile(path.join(directory, "index.client.tsx"), source);
++    if (options.serverSource)
++      await writeFile(path.join(directory, "index.server.ts"), options.serverSource);
+     await pluginClient.patchDaemonConfig({ pluginsEnabled: true });
+     await pluginClient.installDirectoryPlugin(directory);
+     await run();
+diff --git a/packages/app/src/composer/index.tsx b/packages/app/src/composer/index.tsx
+index 5a495cd4703831f8cc1b6f65232f151001e4f495..66d305e1b44e9cd0a87e5e895540672167ce36ef 100644
+--- a/packages/app/src/composer/index.tsx
++++ b/packages/app/src/composer/index.tsx
+@@ -112,6 +112,7 @@ import { useShortcutKeys } from "@/hooks/use-shortcut-keys";
+ import { AutocompletePopover } from "@/components/ui/autocomplete-popover";
+ import type { AutocompleteOption } from "@/components/ui/autocomplete";
+ import { useAgentAutocomplete } from "@/hooks/use-agent-autocomplete";
++import { useTimelineComposerSuggestion } from "@/plugins/timeline";
+ import { usePluginClientSlashCommands } from "@/plugins/client-slash-commands";
+ import {
+   executePluginClientSlashCommand,
+@@ -1758,6 +1759,11 @@ function ComposerContentImpl({
+     hasPendingPermission,
+   );
+   const hasAgent = agentState.status !== null;
++  const suggestedPrompt = useTimelineComposerSuggestion(
++    serverId,
++    agentId,
++    hasAgent && inputMode === "chat" && !readOnly && !hasActiveTurn && !isSubmitLoading,
++  );
+
+   const queueWriter = useMemo<QueueWriter>(
+     () => ({
+@@ -2136,6 +2142,16 @@ function ComposerContentImpl({
+   const handleCommandKeyPress = useCallback(
+     (event: ComposerKeyPressEvent) => {
+       if (autocompleteRef.current?.onKeyPress(event)) return true;
++      if (
++        suggestedPrompt &&
++        event.key === "Tab" &&
++        !event.hasModifier &&
++        !event.input.text.length
++      ) {
++        event.preventDefault();
++        replaceUserInput(suggestedPrompt);
++        return true;
++      }
+       const recalledText = recall.handleKeyPress(event, () =>
+         selectAgentSentMessages(useSessionStore.getState().sessions[serverId], agentId),
+       );
+@@ -2144,7 +2160,7 @@ function ComposerContentImpl({
+       replaceUserInput(recalledText);
+       return true;
+     },
+-    [agentId, recall, replaceUserInput, serverId],
++    [agentId, recall, replaceUserInput, serverId, suggestedPrompt],
+   );
+
+   const cancelButtonStyle = useCallback(
+@@ -2635,7 +2651,7 @@ function ComposerContentImpl({
+                   onPasteImages={handleNativePasteImages}
+                   client={client}
+                   isReadyForDictation={isDictationReady}
+-                  placeholder={messagePlaceholder}
++                  placeholder={suggestedPrompt ?? messagePlaceholder}
+                   autoFocus={messageInputAutoFocus}
+                   autoFocusKey={`${serverId}:${agentId}:${autoFocusKey ?? ""}`}
+                   disabled={isSubmitLoading}
+diff --git a/packages/app/src/plugins/timeline/index.ts b/packages/app/src/plugins/timeline/index.ts
+index b1734e960e5f95136d941c70f8c1d85d694a759d..8963f7c8c7a79e56302af9808ddfa1c201be11c8 100644
+--- a/packages/app/src/plugins/timeline/index.ts
++++ b/packages/app/src/plugins/timeline/index.ts
+@@ -1,5 +1,6 @@
+ import { useMemo } from "react";
+-import { useInstalledPlugins } from "../registry";
++import { useSessionStore } from "@/stores/session-store";
++import { useInstalledPlugin, useInstalledPlugins } from "../registry";
+ import { transformTimelineItem, type TimelineItemTransform } from "./model";
+
+ export type { InstalledPluginTimelineItem, TimelineItemTransform } from "./model";
+@@ -13,3 +14,30 @@ export function useInstalledTimelineTransform(serverId: string): TimelineItemTra
+   );
+   return useMemo(() => (input) => transformTimelineItem({ ...input, plugins }), [plugins]);
+ }
++
++export function useTimelineComposerSuggestion(serverId: string, agentId: string, enabled: boolean) {
++  const row = useSessionStore((state) => {
++    const session = state.sessions[serverId];
++    if (!enabled || !session || session.agentTimelineHasNewer.get(agentId)) return null;
++    const latest =
++      session.agentStreamHead.get(agentId)?.at(-1) ?? session.agentStreamTail.get(agentId)?.at(-1);
++    return latest?.kind === "plugin" ? latest : null;
++  });
++  const plugin = useInstalledPlugin(serverId, row?.pluginId ?? "");
++  return useMemo(() => {
++    if (!row || !plugin) return undefined;
++    const renderer = plugin.timelineRenderers.find(
++      (entry) => entry.kind === row.itemKind && entry.version === row.version,
++    );
++    if (!renderer?.composerSuggestion) return undefined;
++    try {
++      const parsed = renderer.schema.safeParse(row.data);
++      if (!parsed.success) return undefined;
++      const text = renderer.composerSuggestion(parsed.data);
++      return typeof text === "string" && text.trim() ? text : undefined;
++    } catch (error) {
++      console.warn("[Plugins] Composer suggestion failed", error);
++      return undefined;
++    }
++  }, [plugin, row]);
++}
+diff --git a/packages/plugin/src/client/contracts.ts b/packages/plugin/src/client/contracts.ts
+index 13aaa9b71fbb3da9e99933ea643ec242e37a24be..08a466c3a579f2d6aa057c219791aadaed4d2ba5 100644
+--- a/packages/plugin/src/client/contracts.ts
++++ b/packages/plugin/src/client/contracts.ts
+@@ -361,6 +361,8 @@ export interface PluginTimelineRendererContribution<Schema extends ZodType = Zod
+   version: number;
+   schema: Schema;
+   Component: ComponentType<PluginTimelineItemProps<ZodOutput<Schema>>>;
++  /** Draft offered by the latest daemon-appended row while the agent composer is empty. */
++  composerSuggestion?(data: ZodOutput<Schema>): string | undefined;
+ }
+
+ export interface PluginCommandCapabilities {
+diff --git a/public-docs/plugins/reference.md b/public-docs/plugins/reference.md
+index 2b1e8ed0b7764776b8133c35fdbcd293c4cf72e8..16bd123188969cf9fd6b1490e58667796aecea14 100644
+--- a/public-docs/plugins/reference.md
++++ b/public-docs/plugins/reference.md
+@@ -1537,6 +1537,11 @@ The daemon stamps `pluginId` from the calling plugin session and rejects this RP
+ sessions. The row appears live, survives timeline refetches, and keeps only the latest value for the
+ same plugin and `id`. If its renderer is missing, Paseo shows the existing unavailable row.
+
++A timeline renderer can supply `composerSuggestion(data)` and return editable prompt text from
++its validated row, or `undefined`. When that row is the latest entry in an idle agent's timeline,
++the empty composer shows the text as its placeholder. Pressing Tab in the focused web or desktop
++input accepts it as a draft. Plugins can also provide a tap action on the row for touch users.
++
+ `kind` starts with a lowercase letter and contains lowercase letters, numbers, or hyphens, the same
+ rule `addTimelineRenderer` applies. Daemons reject any other `kind`. Daemons reject `data` over the
+ limit rather than truncating it. Daemons that support this operation advertise
