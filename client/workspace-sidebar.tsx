@@ -1,10 +1,11 @@
 import type { PluginSidebarViewProps, ProjectRef, WorkspaceRef } from "@getpaseo/plugin/client";
 import { getPaseoClient, useAgents, useHosts, usePaseo, useProject, useProjects, useWorkspace, useWorkspaces } from "@getpaseo/plugin/client";
-import { Icon, Modal } from "@getpaseo/plugin/client/ui";
+import { Icon, Modal, useToast } from "@getpaseo/plugin/client/ui";
 import { useQueries } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { archiveWorkspaceInBackground } from "./archive-workspace";
 import { providerIconFallbacks } from "./provider-icons";
 import { tint } from "./syntax";
 
@@ -243,10 +244,10 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
   const paseo = usePaseo();
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [choosingProject, setChoosingProject] = useState(false);
-  const [archiveTarget, setArchiveTarget] = useState<(ArchiveTarget & { error?: string }) | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<ArchiveTarget | null>(null);
   const archiveInFlight = useRef(new Set<string>());
   const [pendingArchiveKeys, setPendingArchiveKeys] = useState<ReadonlySet<string>>(new Set());
-  const archiving = archiveTarget !== null && pendingArchiveKeys.has(archiveTarget.reference.key);
+  const toast = useToast();
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30_000);
@@ -334,24 +335,17 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
     });
   }
 
-  async function confirmArchive() {
-    if (!archiveTarget || archiveInFlight.current.has(archiveTarget.reference.key)) return;
-    const { reference } = archiveTarget;
-    const target = { ...archiveTarget, error: undefined };
-    archiveInFlight.current.add(reference.key);
-    setPendingArchiveKeys(new Set(archiveInFlight.current));
-    setArchiveTarget(target);
-    try {
-      const result = await paseo.workspaces.ref(reference).archive();
-      if (result.error) throw new Error(result.error);
-      setArchiveTarget((current) => current === target ? null : current);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not archive the workspace.";
-      setArchiveTarget((current) => current === target ? { ...target, error: message } : current);
-    } finally {
-      archiveInFlight.current.delete(reference.key);
-      setPendingArchiveKeys(new Set(archiveInFlight.current));
-    }
+  function confirmArchive() {
+    if (!archiveTarget) return;
+    const target = archiveTarget;
+    void archiveWorkspaceInBackground({
+      key: target.reference.key,
+      inFlight: archiveInFlight.current,
+      archive: () => paseo.workspaces.ref(target.reference).archive(),
+      onPendingChange: setPendingArchiveKeys,
+      closeDialog: () => setArchiveTarget(null),
+      showError: (message) => toast.error(`Could not archive ${target.title}: ${message}`),
+    });
   }
 
   function dismissArchive() {
@@ -372,7 +366,8 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
         </SidebarRow>
       </View>
       {(["Working", "Done"] as const).map((title) => {
-        const items = sections.find((section) => section.key === title)?.items ?? [];
+        const items = (sections.find((section) => section.key === title)?.items ?? [])
+          .filter((reference) => !pendingArchiveKeys.has(reference.key));
         const count = items.length;
         const expanded = !collapsed.has(title);
         const working = title === "Working";
@@ -460,21 +455,16 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
               This archives the workspace and its agents, and stops any running agents and terminals.
               {archiveTarget.worktree && " Paseo may remove the worktree and discard uncommitted changes."}
             </Text>
-            {archiveTarget.error && (
-              <Text accessibilityRole="alert" style={{ color: colors.statusDanger }}>{archiveTarget.error}</Text>
-            )}
             <View style={styles.archiveButtons}>
-              <SidebarRow colors={colors} disabled={archiving} onPress={dismissArchive} style={styles.touchRow}>
+              <SidebarRow colors={colors} onPress={dismissArchive} style={styles.touchRow}>
                 <Text style={{ color: colors.foreground }}>Cancel</Text>
               </SidebarRow>
               <SidebarRow
                 colors={colors}
-                disabled={archiving}
-                accessibilityState={{ disabled: archiving, busy: archiving }}
-                onPress={() => void confirmArchive()}
+                onPress={confirmArchive}
                 style={styles.touchRow}
               >
-                <Text style={{ color: colors.statusDanger }}>{archiving ? "Archiving…" : "Archive"}</Text>
+                <Text style={{ color: colors.statusDanger }}>Archive</Text>
               </SidebarRow>
             </View>
           </Modal.Content>
