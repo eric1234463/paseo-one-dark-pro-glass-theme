@@ -1,7 +1,8 @@
-# One Dark Pro Night Flat for Paseo
+# T3 Soft for Paseo
 
-Paseo theme adapted from [One Dark Pro Night Flat](https://t3themes.com/themes/one-dark-pro-night-flat/)
-by pantharshit007. The original Glass palette came from Otty's
+Paseo theme adapted from [T3 Soft](https://t3themes.com/themes/t3-soft/)
+by octanethegenio. The earlier [One Dark Pro Night Flat](https://t3themes.com/themes/one-dark-pro-night-flat/)
+palette was by pantharshit007. The original Glass palette came from Otty's
 `one-dark-pro-glass.ottytheme`, a port of bukitoka/one-dark-pro-max's
 `one-dark-pro-glass.json` for Zed.
 
@@ -48,7 +49,7 @@ Working includes running, needs input, and failed states. Completed workspaces
 move to Done as soon as they are ready to review.
 Use **New workspace** above Working to choose a project and open Paseo's
 workspace creation flow.
-Use the archive button on a row to archive that workspace and its agents after
+Use the archive button inside a workspace row to archive that workspace and its agents after
 confirmation. Paseo may remove its worktree.
 Workspace rows show the pull request state and CI checks when Paseo has that
 data. Running workspaces and pending checks use an animated icon that respects
@@ -65,5 +66,5 @@ paseo plugin install /Users/eric/personal-project/paseo-one-dark-pro-glass-theme
 ```
 
 Requires Paseo daemon and client 0.17.3 or later. Then pick
-**One Dark Pro Night Flat** under Settings → Appearance. Requires
+**T3 Soft** under Settings → Appearance. Requires
 **Enable plugins** on the target daemon.

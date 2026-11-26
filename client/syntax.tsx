@@ -51,8 +51,8 @@ export function highlightCode(line: string): Token[] {
   return tokens;
 }
 
-export function tint(hex: string, alpha = "26"): string {
-  return /^#[0-9A-Fa-f]{6}$/.test(hex) ? `${hex}${alpha}` : "transparent";
+export function tint(hex: string, alpha = "26", fallback = "transparent"): string {
+  return /^#[0-9A-Fa-f]{6}$/.test(hex) ? `${hex}${alpha}` : fallback;
 }
 
 export function Tokens({ tokens, fallback }: { tokens: Token[]; fallback: string }) {

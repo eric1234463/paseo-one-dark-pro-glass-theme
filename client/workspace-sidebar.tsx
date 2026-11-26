@@ -66,8 +66,8 @@ function SidebarRow({
         styles.row,
         style,
         {
-          backgroundColor: selected || pressed ? colors.surface2 : hovered ? colors.surface1 : "transparent",
-          borderColor: focused ? colors.accent : "transparent",
+          backgroundColor: selected || pressed ? colors.surface2 : hovered ? tint(colors.foreground, "13", colors.surface1) : "transparent",
+          borderColor: focused ? colors.accent : selected ? tint(colors.foreground, "26", colors.border) : "transparent",
         },
       ]}
     />
@@ -169,7 +169,7 @@ function WorkspaceRow({
         accessibilityState={{ selected }}
         accessibilityLabel={[title, workspace.projectDisplayName, elapsed, provider?.label, workspace.indicatorLabel, prLabel && `Pull request ${prLabel}`, check?.label].filter(Boolean).join(", ")}
         onPress={() => navigation.openWorkspace(reference)}
-        style={[styles.workspaceRow, layout.compact && styles.touchRow]}
+        style={[styles.workspaceRow, layout.compact && styles.touchWorkspaceRow]}
       >
         <View style={styles.workspaceContent}>
           <Text numberOfLines={1} style={[styles.workspaceTitle, { color: colors.foreground }]}>
@@ -217,21 +217,23 @@ function WorkspaceRow({
           )}
         </View>
       </SidebarRow>
-      <SidebarRow
-        colors={colors}
-        accessibilityLabel={`Archive ${title}`}
-        accessibilityState={{ disabled: archiveDisabled }}
-        disabled={archiveDisabled}
-        onPress={() => onArchive({
-          reference,
-          title,
-          directory: workspace.directory,
-          worktree: workspace.kind === "worktree",
-        })}
-        style={[styles.archiveAction, layout.compact && styles.touchAction]}
-      >
-        <Icon name="Archive" size={15} color={colors.foregroundMuted} />
-      </SidebarRow>
+      <View collapsable={false} style={[styles.archiveAction, layout.compact && styles.touchAction]}>
+        <SidebarRow
+          colors={colors}
+          accessibilityLabel={`Archive ${title}`}
+          accessibilityState={{ disabled: archiveDisabled }}
+          disabled={archiveDisabled}
+          onPress={() => onArchive({
+            reference,
+            title,
+            directory: workspace.directory,
+            worktree: workspace.kind === "worktree",
+          })}
+          style={[styles.archiveButton, layout.compact && styles.touchRow]}
+        >
+          <Icon name="Archive" size={15} color={colors.foregroundMuted} />
+        </SidebarRow>
+      </View>
     </View>
   );
 }
@@ -358,7 +360,7 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-      <View style={[styles.createSection, { backgroundColor: colors.surface1 }]}>
+      <View style={[styles.createSection, { backgroundColor: tint(colors.foreground, "0B", colors.surface1) }]}>
         <SidebarRow
           colors={colors}
           accessibilityLabel="New workspace, choose a project"
@@ -374,7 +376,6 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
         const count = items.length;
         const expanded = !collapsed.has(title);
         const working = title === "Working";
-        const sectionColor = working ? colors.accent : colors.statusSuccess;
         return (
           <View key={title}>
             <SidebarRow
@@ -384,8 +385,8 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
               onPress={() => toggle(title)}
               style={[styles.sectionHeader, layout.compact && styles.touchRow]}
             >
-              <View style={[styles.sectionLabel, { backgroundColor: tint(sectionColor, "24") }]}>
-                <Text style={[styles.sectionTitle, { color: sectionColor }]}>{title}</Text>
+              <View style={styles.sectionLabel}>
+                <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{title}</Text>
                 <Text style={[styles.count, { color: colors.foregroundMuted }]}>{count}</Text>
               </View>
               <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
@@ -500,14 +501,16 @@ const styles = StyleSheet.create({
   },
   touchRow: { minHeight: 48 },
   sectionHeader: { minHeight: 32, marginBottom: 2 },
-  sectionLabel: { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 },
+  sectionLabel: { flexDirection: "row", alignItems: "center", gap: 6 },
   sectionTitle: { fontSize: 12, fontWeight: "700" },
   sectionDivider: { flex: 1, height: StyleSheet.hairlineWidth },
   count: { fontSize: 12, fontVariant: ["tabular-nums"] },
-  workspaceActions: { flexDirection: "row", alignItems: "center" },
-  workspaceRow: { flex: 1, minWidth: 0, minHeight: 44, paddingVertical: 5, alignItems: "flex-start" },
-  archiveAction: { width: 30, justifyContent: "center", paddingHorizontal: 0 },
-  touchAction: { width: 48, minHeight: 48 },
+  workspaceActions: { justifyContent: "center" },
+  workspaceRow: { minWidth: 0, minHeight: 44, paddingVertical: 5, paddingRight: 40, alignItems: "flex-start" },
+  touchWorkspaceRow: { minHeight: 50, paddingRight: 56 },
+  archiveAction: { position: "absolute", right: 4, width: 28 },
+  archiveButton: { justifyContent: "center", paddingHorizontal: 0 },
+  touchAction: { right: 1, width: 48 },
   archiveButtons: { flexDirection: "row", justifyContent: "flex-end", gap: 8 },
   workspaceContent: { flex: 1, minWidth: 0, gap: 2 },
   workspaceTitle: { fontSize: 14, lineHeight: 19, fontWeight: "500" },
