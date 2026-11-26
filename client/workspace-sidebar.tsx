@@ -107,6 +107,7 @@ function WorkspaceRow({
   theme: { colors },
   pullRequest,
   provider,
+  archivePending,
   animate,
   now,
   onArchive,
@@ -114,6 +115,7 @@ function WorkspaceRow({
   reference: WorkspaceRef;
   pullRequest?: PullRequest;
   provider?: ProviderDisplay;
+  archivePending: boolean;
   animate: boolean;
   now: number;
   onArchive: (target: ArchiveTarget) => void;
@@ -130,6 +132,7 @@ function WorkspaceRow({
   const time = age === null ? null : age === 0 ? "now" : `${age}${unit.name[0]}`;
   const elapsed = age === null ? null : age === 0 ? "Just now" : `${age} ${unit.name}${age === 1 ? "" : "s"} ago`;
   const selected = active.workspace?.key === reference.key;
+  const archiveDisabled = archivePending || Boolean(workspace.archivingAt);
   const status = {
     running: { icon: "CircleDot", color: colors.accent },
     needs_input: { icon: "CircleAlert", color: colors.statusWarning },
@@ -217,8 +220,8 @@ function WorkspaceRow({
       <SidebarRow
         colors={colors}
         accessibilityLabel={`Archive ${title}`}
-        accessibilityState={{ disabled: Boolean(workspace.archivingAt) }}
-        disabled={Boolean(workspace.archivingAt)}
+        accessibilityState={{ disabled: archiveDisabled }}
+        disabled={archiveDisabled}
         onPress={() => onArchive({
           reference,
           title,
@@ -238,10 +241,10 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
   const paseo = usePaseo();
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [choosingProject, setChoosingProject] = useState(false);
-  const [archiveTarget, setArchiveTarget] = useState<ArchiveTarget | null>(null);
-  const [archiving, setArchiving] = useState(false);
-  const [archiveError, setArchiveError] = useState<string | null>(null);
-  const archiveInFlight = useRef(false);
+  const [archiveTarget, setArchiveTarget] = useState<(ArchiveTarget & { error?: string }) | null>(null);
+  const archiveInFlight = useRef(new Set<string>());
+  const [pendingArchiveKeys, setPendingArchiveKeys] = useState<ReadonlySet<string>>(new Set());
+  const archiving = archiveTarget !== null && pendingArchiveKeys.has(archiveTarget.reference.key);
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30_000);
@@ -330,24 +333,27 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
   }
 
   async function confirmArchive() {
-    if (!archiveTarget || archiveInFlight.current) return;
-    archiveInFlight.current = true;
-    setArchiving(true);
-    setArchiveError(null);
+    if (!archiveTarget || archiveInFlight.current.has(archiveTarget.reference.key)) return;
+    const { reference } = archiveTarget;
+    const target = { ...archiveTarget, error: undefined };
+    archiveInFlight.current.add(reference.key);
+    setPendingArchiveKeys(new Set(archiveInFlight.current));
+    setArchiveTarget(target);
     try {
-      const result = await paseo.workspaces.ref(archiveTarget.reference).archive();
+      const result = await paseo.workspaces.ref(reference).archive();
       if (result.error) throw new Error(result.error);
-      setArchiveTarget(null);
+      setArchiveTarget((current) => current === target ? null : current);
     } catch (error) {
-      setArchiveError(error instanceof Error ? error.message : "Could not archive the workspace.");
+      const message = error instanceof Error ? error.message : "Could not archive the workspace.";
+      setArchiveTarget((current) => current === target ? { ...target, error: message } : current);
     } finally {
-      archiveInFlight.current = false;
-      setArchiving(false);
+      archiveInFlight.current.delete(reference.key);
+      setPendingArchiveKeys(new Set(archiveInFlight.current));
     }
   }
 
   function dismissArchive() {
-    if (!archiveInFlight.current) setArchiveTarget(null);
+    setArchiveTarget(null);
   }
 
   return (
@@ -403,12 +409,10 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
                   reference={reference}
                   pullRequest={prByHost.get(reference.hostId)?.get(reference.id)}
                   provider={provider}
+                  archivePending={pendingArchiveKeys.has(reference.key)}
                   animate={!reduceMotion}
                   now={now}
-                  onArchive={(target) => {
-                    setArchiveError(null);
-                    setArchiveTarget(target);
-                  }}
+                  onArchive={setArchiveTarget}
                   {...props}
                 />
               );
@@ -455,8 +459,8 @@ export function WorkspaceSidebar(props: PluginSidebarViewProps) {
               This archives the workspace and its agents, and stops any running agents and terminals.
               {archiveTarget.worktree && " Paseo may remove the worktree and discard uncommitted changes."}
             </Text>
-            {archiveError && (
-              <Text accessibilityRole="alert" style={{ color: colors.statusDanger }}>{archiveError}</Text>
+            {archiveTarget.error && (
+              <Text accessibilityRole="alert" style={{ color: colors.statusDanger }}>{archiveTarget.error}</Text>
             )}
             <View style={styles.archiveButtons}>
               <SidebarRow colors={colors} disabled={archiving} onPress={dismissArchive} style={styles.touchRow}>
