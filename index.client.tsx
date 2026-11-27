@@ -2,6 +2,7 @@ import type { PluginClientContext } from "@getpaseo/plugin/client";
 import { contributeAgentLog } from "./client/agent-log";
 import { contributeComparePanel } from "./client/compare-panel";
 import { contributeNextPrompt } from "./client/next-prompt";
+import { contributeSubagentDetails } from "./client/subagent-details";
 import { WorkspaceSidebar } from "./client/workspace-sidebar";
 
 // T3 Soft by octanethegenio, adapted to Paseo's theme roles.
@@ -30,6 +31,7 @@ export default function contribute(client: PluginClientContext) {
   const removeAgentLog = contributeAgentLog(client);
   const removeComparePanel = contributeComparePanel(client);
   const removeNextPrompt = contributeNextPrompt(client);
+  const removeSubagentDetails = contributeSubagentDetails(client);
   const removeWorkspaceSidebar = client.addSidebarView({
     id: "working-done",
     title: "Working / Done",
@@ -39,6 +41,7 @@ export default function contribute(client: PluginClientContext) {
     removeAgentLog();
     removeComparePanel();
     removeNextPrompt();
+    removeSubagentDetails();
     removeWorkspaceSidebar();
   };
 }

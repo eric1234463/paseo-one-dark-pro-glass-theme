@@ -1,7 +1,12 @@
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { env } from "node:process";
 import type { PluginHandlerContext, PluginServerContext } from "@getpaseo/plugin/server";
 import { execCommand } from "@getpaseo/plugin/server";
 import { contributeNextPrompt } from "./server/next-prompt";
+import { readCodexSubagents } from "./server/subagent-details";
 import { compareDiffRpc, compareInfoRpc } from "./shared/compare";
+import { subagentDetailsRpc } from "./shared/subagent-details";
 
 // Server side of the Compare panel: runs git in the workspace directory.
 // baseRef is validated as a single ref name (no flags, no shell) and passed
@@ -34,6 +39,12 @@ async function git(cwd: string, args: string[]): Promise<string> {
 
 export default function contribute(server: PluginServerContext) {
   const removeNextPrompt = contributeNextPrompt(server);
+  server.handle(subagentDetailsRpc, async ({ agentId }, ctx) => {
+    const agent = (await ctx.paseo.agents.ref(agentId).refresh())?.agent;
+    const parentId = agent?.runtimeInfo?.sessionId;
+    if (agent?.provider !== "codex" || !parentId) return { children: [] };
+    return { children: await readCodexSubagents(env.CODEX_HOME || join(homedir(), ".codex"), parentId) };
+  });
   server.handle(compareInfoRpc, async (input, ctx) => {
     const { cwd, error } = await resolveCwd(ctx, input.workspaceId);
     if (!cwd) {

@@ -26,6 +26,12 @@ permission prompts. Paseo owns the display setting and remembers the choice
 for the client. **Collapse turns** also folds interim messages after a turn
 ends, and **Full** shows each tool call separately.
 
+Open **Subagent Details** above a Codex composer to see each recorded child
+thread's model and reasoning effort from its latest saved turn. The plugin reads
+Codex session files from the daemon's `CODEX_HOME` (default `~/.codex`). Children
+without a saved turn show unavailable values. Open Paseo's **Subagents** pill
+to view child transcripts.
+
 When a Codex reply includes a follow-up, the empty chat input shows it as a
 placeholder on clients that support `composerSuggestion`. Focus the input and
 press **Tab** to turn the suggestion into a draft you can edit before sending.
