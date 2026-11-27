@@ -65,7 +65,13 @@ export function contributeSubagentDetails(client: PluginClientContext) {
     });
   };
 
-  void client.paseo.agents.list({ scope: "active", subscribe: {}, signal: lifetime.signal }).then(({ subscription }) => {
+  void client.paseo.agents.list({
+    scope: "active",
+    includeBackground: true,
+    sync: {},
+    subscribe: {},
+    signal: lifetime.signal,
+  }).then(({ subscription }) => {
     if (lifetime.signal.aborted) return subscription.release();
     subscription.subscribe({
       snapshot({ entries }) {

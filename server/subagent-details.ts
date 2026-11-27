@@ -5,7 +5,7 @@ import { createInterface } from "node:readline";
 import { z } from "zod";
 import type { CodexChild } from "../shared/subagent-details";
 
-const stringField = z.string().trim().min(1).nullish();
+const stringField = z.string().trim().nullish().transform((value) => value || null);
 const sessionMetadata = z.object({
   type: z.literal("session_meta"),
   payload: z.object({
@@ -50,16 +50,16 @@ async function readChild(path: string, parentId: string): Promise<CodexChild | n
         if (spawn.parent_thread_id !== parentId) return null;
         child = {
           id,
-          name: agent_nickname ?? spawn.agent_nickname ?? null,
-          role: agent_role ?? spawn.agent_role ?? null,
+          name: agent_nickname ?? spawn.agent_nickname,
+          role: agent_role ?? spawn.agent_role,
           model: null,
           effort: null,
         };
       } else if (line.includes('"turn_context"')) {
         const context = turnContext.safeParse(parseLine(line));
         if (context.success) {
-          child.model = context.data.payload.model ?? null;
-          child.effort = context.data.payload.effort ?? null;
+          child.model = context.data.payload.model;
+          child.effort = context.data.payload.effort;
         }
       }
     }

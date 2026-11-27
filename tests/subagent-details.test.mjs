@@ -34,7 +34,8 @@ test("lists only direct children and reads each child's latest saved model and e
   await Promise.all([
     write(sessions, active, session(active, parent, { agent_nickname: "James", agent_role: "explore" }),
       turn("gpt-6.2-sol", "medium"), turn("gpt-6-luna", "high"), '{"type":"turn_context"'),
-    write(archive, archived, session(archived, parent), turn("gpt-6.2-astra", null)),
+    write(archive, archived, session(archived, parent, { agent_nickname: " " }),
+      turn("old-model", "low"), turn("gpt-6.2-astra", " ")),
     write(archive, active, session(active, parent), turn("old-model", "low")),
     write(sessions, pending, session(pending, parent)),
     write(sessions, other, session(other, active), turn("grandchild", "low")),
